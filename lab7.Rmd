@@ -9,7 +9,7 @@ Here is a potentially usful [Reading](http://www.cbcb.umd.edu/~hcorrada/Practica
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-      echo = FALSE,
+      echo = TRUE,
       warning=FALSE,
       message=FALSE,
 #      tidy = TRUE,
@@ -40,9 +40,10 @@ X = data.frame(X)
 We explore all possible subsets of variables using brute force, and we will look at the RSS vs the number of variables. Quote from the help document of `regsubsets`, "Since this function returns separate best models of all sizes up to nvmax and since different model selection criteria such as AIC, BIC, CIC, DIC, ... differ only in how models of different sizes are compared, the results do not depend on the choice of cost-complexity tradeoff."
 
 Note that
-- AIC: 2k - 2log(L)
-- BIC: log(n)k - 2log(L)
-- 
+
+* AIC: 2k - 2log(L)
+* BIC: log(n)k - 2log(L)
+
 
 ```{r subset-selection}
 res <- regsubsets(X,y,nvmax=10) # from "leaps" package
@@ -65,14 +66,18 @@ df <- cbind(X, "y" = y)
 res_step <- step(lm(y~.,data=df),direction="backward")
 summary(res_step)
 ```
+So how does the backward selection function select the models? Let's look at the AIC values of all models first.
+
 ```{r all-model}
 suppressMessages(require(formula.tools))
 tmp <- regsubsets(y ~ ., data=df, nbest=1000, really.big=T, intercept=F)
 all.mods <- summary(tmp)[[1]]
 all.mods <- lapply(1:nrow(all.mods), function(x)as.formula(paste("y~", paste(names(which(all.mods[x,])), collapse="+"))))
 all.lm<-lapply(all.mods, lm, df)
-kable(t(sapply(1:length(all.mods), FUN = function(x){c(as.character(all.mods[[x]]), extractAIC(all.lm[[x]]))})))
+kable(t(sapply(1:length(all.mods), FUN = function(x){c(as.character(all.mods[[x]]), extractAIC(all.lm[[x]])[2])})))
 ```
+
+### 5. Forward Selection
 
 ```{r forward}
 min.model = lm(y ~ 1, data=df)
